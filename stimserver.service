@@ -3,7 +3,7 @@ Description=UDP server for driving stimulation pulses
 After=network.target
 
 [Service]
-ExecStart=/home/kemerelab/Stimserver/stimserver
+ExecStart=/usr/local/bin/stimserver
 RestartSec=5
 
 [Install]

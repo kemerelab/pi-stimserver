@@ -1,5 +1,8 @@
 #! /bin/sh
 
+# Compile and install stimserver
+sudo gcc -o /usr/local/bin/stimserver stimserver.c -lbcm2835
+
 # Other deployment actions here. Want to install (or bounce) service last.
 
 if [ -f /etc/systemd/system/stimserver.service ]; then
