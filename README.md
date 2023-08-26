@@ -79,6 +79,9 @@ Once you log in, you should run `sudo apt update` and then `sudo apt upgrade` to
 3. Run `sudo ./install.sh`, which will compile the code, copy it to `/usr/local/bin`, and install the systemd service.
    If the server installs correctly, the LED on the PCB should start flashing.
 
+4. (Alternativel) You'll need access to the internet, but alternatively to steps 2 and 3, you can copy the `install.sh`, 
+   `stimserver.c`, and `stimserver.service` files over to the Pi using a USB disk.
+
 ## IV. Installing the firmware onto the microcontroller
 
 The easiest way to program the firmware onto the Pico microntroller before you plug the IO PCB into the Raspberry Pi. To do this, connect the Pico board using a micro-USB cable. Hold the button down as you plug it in, and it will show up as a USB drive called
