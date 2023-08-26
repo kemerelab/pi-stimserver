@@ -44,6 +44,27 @@ int pulse()
 
 }
 
+int delay_pulse()
+{
+   struct timespec t1;
+
+   // wait 200 msec for control stimulation
+   t1.tv_sec = 0;
+   t1.tv_nsec = 200 * 1000 * 1000;
+   nanosleep(&t1, NULL);
+
+   // Turn it on
+   bcm2835_gpio_write(PULSE_PIN, HIGH);
+   t1.tv_sec = 0;
+   t1.tv_nsec = 500000; // make sure pulse is detectable by microcontroller
+   nanosleep(&t1, NULL);
+
+   // turn it off
+   bcm2835_gpio_write(PULSE_PIN, LOW);
+
+}
+
+
 struct net_addr
 {
    int ipver;
@@ -88,17 +109,22 @@ int process_messages(char *buffer) {
 
    switch (buffer[0]) {
       case 'C':
-	 fprintf(stderr, "Status check\n");
-	 sendto(main_fd, simple_ack, 1, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-	 break;
+         fprintf(stderr, "Status check\n");
+         sendto(main_fd, simple_ack, 1, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+         break;
       case 'T':
-	 pulse();
-	 fprintf(stderr, "Trigger\n");
-	 sendto(main_fd, simple_ack, 1, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-	 break;
+         pulse();
+         fprintf(stderr, "Trigger\n");
+         sendto(main_fd, simple_ack, 1, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+         break;
+      case 'D':
+         delay_pulse();
+         fprintf(stderr, "Delay sTrigger\n");
+         sendto(main_fd, simple_ack, 1, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+         break;
       default:
-	 fprintf(stderr, "Non-handled command, 0x%02x\n", buffer[0]);
-	 break;
+         fprintf(stderr, "Non-handled command, 0x%02x\n", buffer[0]);
+         break;
    }
    return 0;
 }
@@ -115,17 +141,17 @@ int check_and_flash() {
    }
    else {
       diff = ((int64_t) ts_now.tv_sec - (int64_t) ts_last.tv_sec) * (int64_t)1000000000 
-	 + ((int64_t) ts_now.tv_nsec - (int64_t) ts_last.tv_nsec);
+         + ((int64_t) ts_now.tv_nsec - (int64_t) ts_last.tv_nsec);
       if (diff > 250000000) {
-	 if (state) {
-	    bcm2835_gpio_write(LED_PIN, HIGH);
-	    state = 0;
-	 }
-	 else {
-	    bcm2835_gpio_write(LED_PIN, LOW);
-	    state = 1;
-	 }
-	 ts_last = ts_now;
+         if (state) {
+            bcm2835_gpio_write(LED_PIN, HIGH);
+            state = 0;
+         }
+         else {
+            bcm2835_gpio_write(LED_PIN, LOW);
+            state = 1;
+         }
+         ts_last = ts_now;
       }
    }
 }
@@ -179,22 +205,22 @@ int main()
       /* Blocking recv. */
       int r = recvfrom(main_fd, (char *)buffer, BUFFERLEN, MSG_DONTWAIT, ( struct sockaddr *) &cliaddr, &len);
       if (r <= 0) {
-	 if (errno == EAGAIN || errno == EWOULDBLOCK) {
-	    if (check_and_flash() < 0) {
-	       return -1;
-	    }
-	    else
-	       continue;
-	 }
-	 else if (errno == EINTR) {
-	    continue;
-	 }
-	 fprintf(stderr, "Error in recvfrom.\n");
-	 return(-1);
+         if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            if (check_and_flash() < 0) {
+               return -1;
+            }
+            else
+               continue;
+         }
+         else if (errno == EINTR) {
+            continue;
+         }
+         fprintf(stderr, "Error in recvfrom.\n");
+         return(-1);
       }
       else {
-	 printf("Received %d, First byte from client: 0x%02x\n", r, buffer[0]);
-	 process_messages(buffer);
+         printf("Received %d, First byte from client: 0x%02x\n", r, buffer[0]);
+         process_messages(buffer);
       }
 
    }
