@@ -77,29 +77,14 @@ Once you log in, you should run `sudo apt update` and then `sudo apt upgrade` to
 1. Prerequisite packages: `sudo apt install build-essential git libbcm2835-dev`.
 2. Clone the pi-stimserver repository: `git clone https://github.com/kemerelab/pi-stimserver`
 3. Run `sudo ./install.sh`, which will compile the code, copy it to `/usr/local/bin`, and install the systemd service.
-
+   If the server installs correctly, the LED on the PCB should start flashing.
 
 ## IV. Installing the firmware onto the microcontroller
-# Firmware for the RP2040 on the shield for Network Triggered IO
 
-
-## Setup for programing a Pico using the debug interface on from a Raspberry Pi.
-_from the [Getting Started Guide](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)_. In order to install OpenOCD, we needed the following packages:
-`automake autoconf build-essential texinfo libtool libftdi-dev libusb-1.0-0-dev pkg-config`. 
-
-Then we ran:
-```
-git clone https://github.com/raspberrypi/openocd.git --branch rp2040 --recursive --depth=1
-cd openocd
-./bootstrap
-./configure --enable-ftdi --enable-sysfsgpio --enable-bcm2835gpio
-make -j4
-sudo make install
-```
-
-We connected SWDIO (the left debug pin when the usb connector is facing north) to the Pi GPIO 24 (pin 18) and SWCLK to Pi GPIO 25 (pin 22), with the center ground pin connected via a different Pico ground pin. (Note that there's other suggested pins, GPIO 14 and 15, which should be connected to enable UART interface during debugging.)
-
-After copying the `.elf` file over to the Pi, we finally, we have the command `openocd -f interface/raspberrypi-swd.cfg -f target/rp2040.cfg -c "program stim-pulser.elf verify reset exit"`.
+The easiest way to program the firmware onto the Pico microntroller before you plug the IO PCB into the Raspberry Pi. To do this, connect the Pico board using a micro-USB cable. Hold the button down as you plug it in, and it will show up as a USB drive called
+`RPI-RP2`. Copy the firmware blob - [pico-firmware-blog/stim-pulser.uf2](pico-firmware-blog/stim-pulser.uf2) - into the drive
+and if the programming is successful the drive will "unplug". You can then install the PCB onto the Raspberry Pi and reboot it. The
+green LED on the Pico microntroller will flash when ever stimulation is triggered if the firmware is installed correctly. 
 
 
 ## V. (Optional) Compiling new firmware
@@ -119,3 +104,26 @@ To compile the RP2040 firmware, we needed to:
  - Compile the sdk (and examples). `cd pico-sdk; mkdir build; cd build; cmake ..; make`
 
 ### Compiling the firmware
+
+  1. Change into the firmware directory, `pico-firmware-src`. 
+  2. Make a new directory, e.g., `mkdir build`. 
+  3. Change into this directory (`cd build`) and run cmake, `cmake ..`. (The `..` tells cmake to look at the CMakeLists.txt file in the src directory.)
+  4. If cmake completes without error, you can run `make`. This will compile the code and generate the `stim-pulser.uf2` and `stim-pulser.elf` files.
+
+## (Optional) Setup for programing a Pico using the debug interface on from a Raspberry Pi.
+_from the [Getting Started Guide](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)_. In order to install OpenOCD, we needed the following packages:
+`automake autoconf build-essential texinfo libtool libftdi-dev libusb-1.0-0-dev pkg-config`. 
+
+Then we ran:
+```
+git clone https://github.com/raspberrypi/openocd.git --branch rp2040 --recursive --depth=1
+cd openocd
+./bootstrap
+./configure --enable-ftdi --enable-sysfsgpio --enable-bcm2835gpio
+make -j4
+sudo make install
+```
+
+We connected SWDIO (the left debug pin when the usb connector is facing north) to the Pi GPIO 24 (pin 18) and SWCLK to Pi GPIO 25 (pin 22), with the center ground pin connected via a different Pico ground pin. (Note that there's other suggested pins, GPIO 14 and 15, which should be connected to enable UART interface during debugging.)
+
+After copying the `.elf` file over to the Pi, we finally, we have the command `openocd -f interface/raspberrypi-swd.cfg -f target/rp2040.cfg -c "program stim-pulser.elf verify reset exit"`.
